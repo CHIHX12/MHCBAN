@@ -1,0 +1,43 @@
+PEPTIDE:
+  VOCAB_SIZE: 25
+  EMB_DIM: 128
+  HIDDEN_DIM: 128
+  NUM_LAYERS: 2
+  DROPOUT: 0.2
+  MAX_LEN: 30
+
+MHC:
+  VOCAB_SIZE: 25
+  EMB_DIM: 128
+  HIDDEN_DIM: 128
+  NUM_LAYERS: 2
+  DROPOUT: 0.2
+  MAX_LEN: 34
+
+BCN:
+  HEADS: 3
+
+DECODER:
+  IN_DIM: 256
+  HIDDEN_DIM: 512
+  OUT_DIM: 128
+  BINARY: 1
+
+SOLVER:
+  BATCH_SIZE: 64
+  LR: 0.001
+  EPOCHS: 100
+  SEED: 42
+
+RESULT:
+  OUTPUT_DIR: ./results_clean
+  SAVE_MODEL: true
+
+DA:
+  USE: false          # set true to enable domain adaptation
+  METHOD: CDAN        # only CDAN supported
+  INIT_EPOCH: 10      # start DA loss after this epoch (warm-up)
+  LAMB_DA: 1.0        # weight of DA loss
+  USE_ENTROPY: true   # entropy-weighted CDAN
+  RANDOM_DIM: 1024    # random projection dim for CDAN
+  DA_LR: 0.001        # discriminator learning rate

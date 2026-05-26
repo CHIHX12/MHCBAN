@@ -1,0 +1,18 @@
+seed=42
+
+TRAIN alleles (7):
+HLA-C*04:01
+HLA-C*05:01
+HLA-C*07:01
+HLA-C*07:02
+HLA-C*08:02
+HLA-C*12:03
+HLA-C*14:02
+
+VAL alleles (2):
+HLA-C*06:02
+HLA-C*15:02
+
+TEST alleles (2):
+HLA-C*01:02
+HLA-C*03:03

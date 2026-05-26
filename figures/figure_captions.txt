@@ -1,0 +1,142 @@
+MHCBAN — Figure Captions
+========================
+All figures: 600 DPI, DejaVu Sans font, PDF + PNG + SVG.
+Data source: results_clean/ (PTM-cleaned dataset, seeds 42–51, N = 10).
+Gray zone figures (Fig. 6–8): Pan-HLA Random and Cluster checkpoints, seed 42.
+
+────────────────────────────────────────────────────────────────────────────────
+Figure 0  |  fig0_model_architecture.{pdf,png,svg}
+────────────────────────────────────────────────────────────────────────────────
+Block diagram of the MHCBAN model architecture. The network comprises two
+parallel BiLSTM encoder branches and a central BAN + MLP decoder.
+
+Left branch (PeptideBiLSTM, 662,656 params): Peptide sequence (max 30 aa,
+vocabulary size 25) → Embedding (25→128) → Dropout(p=0.2) → BiLSTM Layer 1
+(input=128, hidden=128 per direction, bidirectional output=256) → BiLSTM
+Layer 2 (input=256, hidden=128, bidirectional output=256) → feature matrix
+(batch × 30 × 256).
+
+Right branch (MHCBiLSTM, 662,656 params): MHC 34-position pseudo-sequence
+(NetMHCpan definition, vocabulary size 25) → identical BiLSTM structure →
+feature matrix (batch × 34 × 256).
+
+Center — BAN Layer (397,574 params, identical to DrugBAN): v_net FC 256→768
++ ReLU (197,377 params); q_net FC 256→768 + ReLU (197,377 params); h_mat
+weight-normalized parameter (attention glimpses = 3, 2,308 params); AvgPool1d
+(kernel=3); BatchNorm1d(256) (512 params). Output: attended joint
+representation (batch × 256).
+
+MLP Decoder (462,337 params, identical to DrugBAN): FC1 256→512 + BN +
+ReLU; FC2 512→512 + BN + ReLU; FC3 512→128 + BN + ReLU; FC4 128→1 (raw
+logit). Sigmoid converts logit to binding probability ∈ [0, 1]; threshold
+0.5 defines the binder/non-binder decision boundary.
+
+Total parameters: 2,185,223 (all trainable). Parametric layers: 15.
+Total computational depth: 21 operations (including activations and dropout).
+Color code: purple = input, light blue = embedding, dark blue = BiLSTM,
+light green = BAN sub-components, orange = MLP sub-components, dark red = output.
+
+────────────────────────────────────────────────────────────────────────────────
+Figure 1  |  fig1_auroc_overview.{pdf,png,svg}
+────────────────────────────────────────────────────────────────────────────────
+AUROC comparison across all 13 MHCBAN experiments (mean ± SD, n = 10 seeds).
+Bars are color-coded by training strategy: blue = Random split (Plan 1), orange =
+Cluster split (Plan 1), purple = Cross-HLA Domain Adaptation (Plan 2, CDAN),
+green = Transfer Learning (Plan 3), red = Pan-HLA universal model (Plan 4).
+Dashed horizontal line marks the random classifier baseline (AUROC = 0.5).
+The Pan-HLA Random model achieves the highest single-model AUROC (0.979 ± 0.001),
+matching individual HLA-A Random performance while covering all three HLA types.
+
+────────────────────────────────────────────────────────────────────────────────
+Figure 2  |  fig2_metrics_heatmap.{pdf,png,svg}
+────────────────────────────────────────────────────────────────────────────────
+Comprehensive performance heatmap for all 13 experiments across six evaluation
+metrics: AUROC, AUPRC, F1, Sensitivity, Specificity, and Accuracy (mean ± SD,
+n = 10 seeds). Cells are colored by the RdYlGn colormap (red = low, yellow =
+medium, green = high; range 0.3–1.0). Row labels are color-coded by experimental
+group (same scheme as Figure 1). Cells with mean < 0.42 or > 0.88 use white text
+for readability. Note that HLA-C Cluster shows low AUROC (0.403 ± 0.066) but
+high specificity (0.984 ± 0.021), reflecting the model's strong non-binder
+recognition but failure to identify binders from unseen alleles.
+
+────────────────────────────────────────────────────────────────────────────────
+Figure 3  |  fig3_random_vs_cluster.{pdf,png,svg}
+────────────────────────────────────────────────────────────────────────────────
+Side-by-side comparison of Random split versus Cluster (allele cold-start) split
+performance for HLA-A, HLA-B, and HLA-C individual models (Plan 1). Paired bars
+show mean ± SD across 10 seeds for all six metrics. The performance gap between
+Random and Cluster splits reflects the difficulty of generalizing to unseen HLA
+alleles: minimal for HLA-A (AUROC Δ = 0.048), moderate for HLA-B (AUROC Δ =
+0.194), and severe for HLA-C (AUROC Δ = 0.470), attributable to HLA-C's limited
+allele diversity (11 alleles total, only 2 in the test set).
+
+────────────────────────────────────────────────────────────────────────────────
+Figure 4  |  fig4_cold_start_comparison.{pdf,png,svg}
+────────────────────────────────────────────────────────────────────────────────
+Method comparison for allele cold-start and universal prediction scenarios (AUROC,
+mean ± SD, n = 10 seeds). Four subpanels: (left to right) HLA-A cold-start, HLA-B
+cold-start, HLA-C cold-start, and universal prediction across all HLA types.
+For HLA-B cold-start, Plan 3 fine-tuning (0.768 ± 0.024) outperforms Plan 1
+Cluster (0.782 ± 0.030) marginally but benefits from cross-HLA knowledge transfer.
+For HLA-C cold-start, the Pan-HLA model (Plan 4 Cluster, 0.896 ± 0.013) far
+surpasses both Plan 1 Cluster (0.403 ± 0.066) and Plan 3 fine-tuning (0.593 ±
+0.101), demonstrating that pooling all HLA training data provides superior
+generalization for rare alleles. Dashed line: random classifier baseline (0.5).
+
+────────────────────────────────────────────────────────────────────────────────
+Figure 5  |  fig5_pan_vs_individual.{pdf,png,svg}
+────────────────────────────────────────────────────────────────────────────────
+Pan-HLA universal model (Plan 4) versus individual HLA-A, HLA-B, and HLA-C models
+(Plan 1) across all six evaluation metrics (mean ± SD, n = 10 seeds). Six subpanels
+correspond to AUROC, AUPRC, F1, Sensitivity, Specificity, and Accuracy. Within each
+subpanel, bars are grouped into Random split (left, blue) and Cluster split (right,
+orange); Pan-HLA bars (red, red-outlined) are shown for each split type. A dashed
+vertical line separates the two split regimes. Annotation texts indicate group
+affiliation. Pan-HLA Random achieves performance on par with or exceeding individual
+Random-split models (AUROC 0.979 vs. 0.977/0.976/0.873 for A/B/C) while using a
+single model for all HLA types. Pan-HLA Cluster (0.896) substantially outperforms
+HLA-B Cluster (0.782) and HLA-C Cluster (0.403).
+
+────────────────────────────────────────────────────────────────────────────────
+Figure 6  |  fig6_gray_scatter.{pdf,png,svg}  [Gray Zone Inference]
+────────────────────────────────────────────────────────────────────────────────
+Scatter plot of predicted binding probability versus log10(IC50) for 45,115
+gray-zone peptides (IC50 100–10,000 nM) not included in binary training.
+Left panel: Pan-HLA Random model (best_model_epoch_15.pth, seed 42).
+Right panel: Pan-HLA Cluster model (best_model_epoch_12.pth, seed 42).
+Points are colored by HLA type: blue = HLA-A (n = 32,638), orange = HLA-B
+(n = 11,565), green = HLA-C (n = 912); black line = linear trend (OLS).
+Vertical dotted lines mark 500 nM (clinical weak-binder threshold, pink) and
+2,000 nM (non-binder cutoff in some conventions, purple); horizontal dashed line
+marks P = 0.5 decision boundary. Spearman correlation between −log10(IC50) and
+predicted probability: r = 0.455 (Random), r = 0.383 (Cluster), p ≈ 0 for both.
+The monotonic relationship confirms that the binary Pan-HLA model learned a
+continuous affinity ranking consistent with established IC50 thresholds, even
+though it was never trained on gray-zone peptides.
+
+────────────────────────────────────────────────────────────────────────────────
+Figure 7  |  fig7_gray_boxplot.{pdf,png,svg}  [Gray Zone Inference]
+────────────────────────────────────────────────────────────────────────────────
+Box plots of predicted binding probability for six IC50 bins spanning the gray
+zone (100–200, 200–500, 500–1k, 1k–2k, 2k–5k, 5k–10k nM).
+Left panel: Pan-HLA Random; Right panel: Pan-HLA Cluster. Boxes colored by a
+green-to-red colormap (low IC50 = green/high probability, high IC50 = red/low
+probability). Horizontal dashed line marks P = 0.5; sample counts shown below
+each box. Pan-HLA Random bin means descend monotonically from 0.737 (100–200 nM)
+to 0.226 (5k–10k nM), crossing the 0.5 boundary between the 500–1k nM
+(mean = 0.519) and 1k–2k nM (mean = 0.423) bins — consistent with the
+conventional 500 nM clinical binder/non-binder threshold. Pan-HLA Cluster shows
+the same trend at a uniformly lower probability level (0.599 → 0.192).
+
+────────────────────────────────────────────────────────────────────────────────
+Figure 8  |  fig8_gray_histogram.{pdf,png,svg}  [Gray Zone Inference]
+────────────────────────────────────────────────────────────────────────────────
+Predicted binding probability distributions for Pan-HLA Random model on gray-zone
+peptides, stratified by HLA type. Three subpanels: HLA-A (n = 32,638), HLA-B
+(n = 11,565), HLA-C (n = 912). Each histogram uses 40 bins; red dashed line marks
+P = 0.5; inset text shows the percentage of peptides classified as binders (P > 0.5).
+HLA-A: 49.1% predicted binders; HLA-B: 41.5%; HLA-C: 44.6%. The bimodal-to-broad
+distributions reflect the gray zone's inherent ambiguity: many peptides near 500 nM
+receive moderate-to-high scores (near 0.5), while those approaching 10,000 nM
+receive near-zero scores. The model behaves as a soft continuous classifier even
+in the unseen IC50 range.
